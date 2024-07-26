@@ -163,7 +163,7 @@ def main():
         plt.figure(figsize=(8,14))
         plt.plot(x, y, color=color)
         plt.title('Intan recording: Channel ' + loc)
-        plt.xlabel('Time')
+        plt.xlabel('Time (s)')
         plt.xlim(0, maxlim)
         plt.ylabel('Signal (µV)')
         plt.grid(True)
