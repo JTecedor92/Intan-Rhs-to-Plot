@@ -105,68 +105,104 @@ def process_main_folder(folder_path, channel):
     rhs_folders=list_rhs_files(folder_path)
     for rhs_folder in rhs_folders:
         rhs_folders_path.append(os.path.join(folder_path, rhs_folder))
-    concatenated_signal,concatenated_time=Concatenate(rhs_folders_path)
+    concatenated_signal,concatenated_time,concatenated_stim=Concatenate(rhs_folders_path)
 
     # Transpose the list of signals to align with concatenated_time
     transposed_signals = list(zip(*concatenated_signal))
     data = [ [time] + list(signals) for time, signals in zip(concatenated_time, transposed_signals)]
-    
+    stim = concatenated_stim
     for i in data:
         x.append(i[0:1])
         y.append(i[channel:(channel + 1)])
+        
     print('Data collected')
-    return x, y
+    return x, y, stim
     
 
 
 def Concatenate(rhs_folders):
     concatenated_signal = None
     concatenated_time= None
+    concatenated_stim = None
     for file_name in sorted(rhs_folders):
         rhs_data = read_data(file_name)  # Assuming this returns a dict with necessary data
         # Concatenate data across files
         if concatenated_signal is None:
             concatenated_signal = rhs_data['amplifier_data']
             concatenated_time=rhs_data['t']
+            concatenated_stim = rhs_data['board_dig_out_data']
 
             #concatenated_board_dig_in_data = rhs_data['board_dig_in_data']
         else:
             concatenated_signal = np.concatenate((concatenated_signal, rhs_data['amplifier_data']), axis=1)
             concatenated_time = np.concatenate((concatenated_time, rhs_data['t']))
+            concatenated_time = np.concatenate((concatenated_stim, rhs_data['board_dig_out_data']))
 
     print('All files read and concatinated')
-    return concatenated_signal,concatenated_time
+    return concatenated_signal,concatenated_time,concatenated_stim
 
 
 def main():
     root = tk.Tk()
     root.withdraw()  # Hide the main window
     folder_path = filedialog.askdirectory(title="Select the main folder")
-    print('Which channel would you like to plot:')
+
+    print('Channel:')
     channel = int(input())
-    print('How many seconds of data would you like to plot:')
+
+    print('Min Seconds:')
+    minlim = int(input())
+    print('Max Seconds:')
     maxlim = int(input())
-    print('Choose a color:')
+
+    print('Color:')
     color = input()
-    if channel >= 43:
-        loc = 'B - 0' + str(channel - 33)
-    elif channel >= 33:
-        loc = 'B - 00' + str(channel - 33)
-    elif channel >= 11:
-        loc = 'A - 0' + str(channel - 1)
+
+    print('Stim (y/n):')
+    st = input()
+    if st == 'y':
+        stimbool = True
+        type = 'stim'
+        print('Stim Channel 1 Info (name, µV, color):')
+        stimchannel1 = input()
+        stimv1 = input()
+        stimcolor1 = input()
+        print('Stim Channel 2 Info (name, µV, color):')
+        stimchannel2 = input()
+        stimv2 = input()
+        stimcolor2 = input()
     else:
-        loc = 'A - 00' + str(channel - 1)
+        stimbool = False
+        type = 'baseline'
+
+    if channel >= 43:
+        loc = 'B-0' + str(channel - 33)
+    elif channel >= 33:
+        loc = 'B-00' + str(channel - 33)
+    elif channel >= 11:
+        loc = 'A-0' + str(channel - 1)
+    else:
+        loc = 'A-00' + str(channel - 1)
     
     if folder_path:
-        x, y = process_main_folder(folder_path, channel)
-        
+        x, y, stim = process_main_folder(folder_path, channel)
         plt.figure(figsize=(8,14))
-        plt.plot(x, y, color=color)
+        plt.plot(x, y, color=color, label='Channel ' + loc + ' (' + type + ')')
+        if stimbool:
+            z = stim*1
+            c = 0
+            for i in z:
+                if c < 1:
+                    plt.plot(x, 50*i, color=stimcolor1, label=stimchannel1 + ' (' + stimv1 + 'µV)')
+                    c = c + 1
+                else:
+                   plt.plot(x, 50*i, color=stimcolor2, label=stimchannel2 + ' (' + stimv2 + ' µV)')
         plt.title('Intan recording: Channel ' + loc)
         plt.xlabel('Time (s)')
-        plt.xlim(0, maxlim)
+        plt.xlim(minlim, maxlim)
         plt.ylabel('Signal (µV)')
         plt.grid(True)
+        plt.legend(loc='upper left')
 
         plt.tight_layout()
         plt.show()
