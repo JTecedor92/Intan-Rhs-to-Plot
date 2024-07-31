@@ -98,14 +98,14 @@ def list_rhs_files(directory):
 
 
 # New function to handle the main folder processing
-def process_main_folder(folder_path, channel):
+def process_main_folder(folder_path, channel, stimbool):
     rhs_folders_path=[]
     x = []
     y = []
     rhs_folders=list_rhs_files(folder_path)
     for rhs_folder in rhs_folders:
         rhs_folders_path.append(os.path.join(folder_path, rhs_folder))
-    concatenated_signal,concatenated_time,concatenated_stim=Concatenate(rhs_folders_path)
+    concatenated_signal,concatenated_time,concatenated_stim=Concatenate(rhs_folders_path, stimbool)
 
     # Transpose the list of signals to align with concatenated_time
     transposed_signals = list(zip(*concatenated_signal))
@@ -120,7 +120,7 @@ def process_main_folder(folder_path, channel):
     
 
 
-def Concatenate(rhs_folders):
+def Concatenate(rhs_folders, stimbool):
     concatenated_signal = None
     concatenated_time= None
     concatenated_stim = None
@@ -130,13 +130,15 @@ def Concatenate(rhs_folders):
         if concatenated_signal is None:
             concatenated_signal = rhs_data['amplifier_data']
             concatenated_time=rhs_data['t']
-            concatenated_stim = rhs_data['board_dig_out_data']
+            if stimbool:
+                concatenated_stim = rhs_data['board_dig_out_data']
 
             #concatenated_board_dig_in_data = rhs_data['board_dig_in_data']
         else:
             concatenated_signal = np.concatenate((concatenated_signal, rhs_data['amplifier_data']), axis=1)
             concatenated_time = np.concatenate((concatenated_time, rhs_data['t']))
-            concatenated_time = np.concatenate((concatenated_stim, rhs_data['board_dig_out_data']))
+            if stimbool:
+                concatenated_time = np.concatenate((concatenated_stim, rhs_data['board_dig_out_data']))
 
     print('All files read and concatinated')
     return concatenated_signal,concatenated_time,concatenated_stim
@@ -144,24 +146,19 @@ def Concatenate(rhs_folders):
 
 def main():
     root = tk.Tk()
-    root.withdraw()  # Hide the root window
-
+    root.attributes('-topmost', True)  # Display the dialog in the foreground.
+    root.iconify()  # Hide the little window.
 
     print('\nHow many channels should be plotted:')
     numch = int(input())
+    plt.figure(figsize=(8,14))
 
     for _ in range(numch):
-        print('top reached')
         folder_path = filedialog.askdirectory(title="Select the main folder")
         print('\nFolder selected')
 
         print('Channel:')
         channel = int(input())
-
-        print('Min Seconds:')
-        minlim = int(input())
-        print('Max Seconds:')
-        maxlim = int(input())
 
         print('Color:')
         color = input()
@@ -193,8 +190,7 @@ def main():
             loc = 'A-00' + str(channel - 1)
     
         if folder_path:
-            x, y, stim = process_main_folder(folder_path, channel)
-            plt.figure(figsize=(8,14))
+            x, y, stim = process_main_folder(folder_path, channel, stimbool)
             plt.plot(x, y, color=color, label='Channel ' + loc + ' (' + kind + ')')
 
             if stimbool:
@@ -209,22 +205,28 @@ def main():
                             indexes.append(elem)
                     for j in indexes:
                         if c1 == 0 and c2 == 0:
-                            plt.vlines(x = x[j], color=stimcolor1, label=stimchannel1 + ' (' + stimv1 + 'µV)', ymin = -50, ymax = 50)
+                            plt.vlines(x = x[j], color=stimcolor1, label=stimchannel1 + ' (' + stimv1 + 'µA)', ymin = -50, ymax = 50)
                         elif c1 == 0 and c2 > 0:
                             plt.vlines(x = x[j], color=stimcolor1, ymin = -50, ymax = 50)
                         elif c1 > 0 and c2 == 0:
-                            plt.vlines(x = x[j], color=stimcolor2, label=stimchannel2 + ' (' + stimv2 + 'µV)', ymin = -50, ymax = 50)
+                            plt.vlines(x = x[j], color=stimcolor2, label=stimchannel2 + ' (' + stimv2 + 'µA)', ymin = -50, ymax = 50)
                         else:
                             plt.vlines(x = x[j], color=stimcolor2, ymin = -50, ymax = 50)
                         c2 = c2 + 1
                     c1 = c1 + 1
             print('Plotting...')
 
+    root.destroy()
     if numch > 1:
-        print('Title:')
+        print('\nTitle:')
         title = input()
+        print('Min Seconds:')
     else:
         title = 'Intan recording: Channel ' + loc
+        print('\nMin Seconds:')
+    minlim = int(input())
+    print('Max Seconds:')
+    maxlim = int(input())
 
     plt.title(title)
     plt.xlabel('Time (s)')
