@@ -227,11 +227,14 @@ def main():
     minlim = int(input())
     print('Max Seconds:')
     maxlim = int(input())
+    print('Range:')
+    yrange = int(input())
 
     plt.title(title)
     plt.xlabel('Time (s)')
     plt.xlim(minlim, maxlim)
     plt.ylabel('Signal (µV)')
+    plt.ylim(-1*yrange, yrange)
     plt.grid(True)
     plt.legend(loc='upper left')
 
