@@ -148,97 +148,115 @@ def main():
     root = tk.Tk()
     root.attributes('-topmost', True)  # Display the dialog in the foreground.
     root.iconify()  # Hide the little window.
+    plt.figure(figsize=(10,14))
 
-    print('\nHow many channels should be plotted:')
-    numch = int(input())
-    plt.figure(figsize=(8,14))
+    print('\nNumber of plots:')
+    plotnum = int(input())
+    print('Number of rows:')
+    rownum = int(input())
+    print('Number of columns:')
+    colnum = int(input())
+    if plotnum <= (rownum*colnum):
+        print('\nLayout mapped')
+    else:
+        print('\nFaulty layout')
+        quit()
 
-    for _ in range(numch):
-        folder_path = filedialog.askdirectory(title="Select the main folder")
-        print('\nFolder selected')
+    plotid = 0
+    for _ in range(plotnum):
+        plotid = plotid + 1
+        plt.subplot(rownum, colnum, plotid)
 
-        print('Channel:')
-        channel = int(input())
+        print('\nPlot ' + str(plotid))
+        print('Number of Channels:')
+        numch = int(input())
 
-        print('Color:')
-        color = input()
+        for _ in range(numch):
+            folder_path = filedialog.askdirectory(title="Select the main folder")
+            print('\nFolder selected')
 
-        print('Stim (y/n):')
-        st = input()
-        if st == 'y':
-            stimbool = True
-            kind = 'stim'
-            print('Stim Channel 1 Info (name, µA, color):')
-            stimchannel1 = input()
-            stimv1 = input()
-            stimcolor1 = input()
-            print('Stim Channel 2 Info (name, µA, color):')
-            stimchannel2 = input()
-            stimv2 = input()
-            stimcolor2 = input()
-        else:
-            stimbool = False
-            kind = 'baseline'
+            print('Channel:')
+            channel = int(input())
 
-        if channel >= 43:
-            loc = 'B-0' + str(channel - 33)
-        elif channel >= 33:
-            loc = 'B-00' + str(channel - 33)
-        elif channel >= 11:
-            loc = 'A-0' + str(channel - 1)
-        else:
-            loc = 'A-00' + str(channel - 1)
+            print('Color:')
+            color = input()
+
+            print('Stim (y/n):')
+            st = input()
+            if st == 'y':
+                stimbool = True
+                kind = 'stim'
+                print('Stim Channel 1 Info (name, µA, color):')
+                stimchannel1 = input()
+                stimv1 = input()
+                stimcolor1 = input()
+                print('Stim Channel 2 Info (name, µA, color):')
+                stimchannel2 = input()
+                stimv2 = input()
+                stimcolor2 = input()
+            else:
+                stimbool = False
+                kind = 'baseline'
+
+            if channel >= 43:
+                loc = 'B-0' + str(channel - 33)
+            elif channel >= 33:
+                loc = 'B-00' + str(channel - 33)
+            elif channel >= 11:
+                loc = 'A-0' + str(channel - 1)
+            else:
+                loc = 'A-00' + str(channel - 1)
     
-        if folder_path:
-            x, y, stim = process_main_folder(folder_path, channel, stimbool)
-            plt.plot(x, y, color=color, label='Channel ' + loc + ' (' + kind + ')')
+            if folder_path:
+                x, y, stim = process_main_folder(folder_path, channel, stimbool)
+                plt.plot(x, y, color=color, label='Channel ' + loc + ' (' + kind + ')')
 
-            if stimbool:
-                z = stim*1
-                z = z.tolist()
-                c1 = 0
-                for i in z:
-                    c2 = 0
-                    indexes=[]
-                    for elem in range(0, len(i)):
-                        if i[elem] == 1:
-                            indexes.append(elem)
-                    for j in indexes:
-                        if c1 == 0 and c2 == 0:
-                            plt.vlines(x = x[j], color=stimcolor1, label=stimchannel1 + ' (' + stimv1 + 'µA)', ymin = -50, ymax = 50)
-                        elif c1 == 0 and c2 > 0:
-                            plt.vlines(x = x[j], color=stimcolor1, ymin = -50, ymax = 50)
-                        elif c1 > 0 and c2 == 0:
-                            plt.vlines(x = x[j], color=stimcolor2, label=stimchannel2 + ' (' + stimv2 + 'µA)', ymin = -50, ymax = 50)
-                        else:
-                            plt.vlines(x = x[j], color=stimcolor2, ymin = -50, ymax = 50)
-                        c2 = c2 + 1
-                    c1 = c1 + 1
-            print('Plotting...')
+                if stimbool:
+                    z = stim*1
+                    z = z.tolist()
+                    c1 = 0
+                    for i in z:
+                        c2 = 0
+                        indexes=[]
+                        for elem in range(0, len(i)):
+                            if i[elem] == 1:
+                                indexes.append(elem)
+                        for j in indexes:
+                            if c1 == 0 and c2 == 0:
+                                plt.vlines(x = x[j], color=stimcolor1, label=stimchannel1 + ' (' + stimv1 + 'µA)', ymin = -50, ymax = 50)
+                            elif c1 == 0 and c2 > 0:
+                                plt.vlines(x = x[j], color=stimcolor1, ymin = -50, ymax = 50)
+                            elif c1 > 0 and c2 == 0:
+                                plt.vlines(x = x[j], color=stimcolor2, label=stimchannel2 + ' (' + stimv2 + 'µA)', ymin = -50, ymax = 50)
+                            else:
+                                plt.vlines(x = x[j], color=stimcolor2, ymin = -50, ymax = 50)
+                            c2 = c2 + 1
+                        c1 = c1 + 1
+                print('Plotting...')
+
+        if numch > 1:
+            print('\nTitle:')
+            title = input()
+            print('Min Seconds:')
+        else:
+            title = 'Intan recording: Channel ' + loc
+            print('\nMin Seconds:')
+        minlim = int(input())
+        print('Max Seconds:')
+        maxlim = int(input())
+        print('Range:')
+        yrange = int(input())
+
+        plt.title(title)
+        plt.xlabel('Time (s)')
+        plt.xlim(minlim, maxlim)
+        plt.ylabel('Signal (µV)')
+        plt.ylim(-1*yrange, yrange)
+        plt.grid(True)
+        plt.legend(loc='upper left')
 
     root.destroy()
-    if numch > 1:
-        print('\nTitle:')
-        title = input()
-        print('Min Seconds:')
-    else:
-        title = 'Intan recording: Channel ' + loc
-        print('\nMin Seconds:')
-    minlim = int(input())
-    print('Max Seconds:')
-    maxlim = int(input())
-    print('Range:')
-    yrange = int(input())
-
-    plt.title(title)
-    plt.xlabel('Time (s)')
-    plt.xlim(minlim, maxlim)
-    plt.ylabel('Signal (µV)')
-    plt.ylim(-1*yrange, yrange)
-    plt.grid(True)
-    plt.legend(loc='upper left')
-
-    plt.tight_layout()
+    plt.tight_layout(h_pad=1.5)
     plt.show()
     
 if __name__ == "__main__":
