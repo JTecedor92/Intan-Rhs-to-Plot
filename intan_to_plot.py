@@ -168,11 +168,11 @@ def main():
         if st == 'y':
             stimbool = True
             kind = 'stim'
-            print('Stim Channel 1 Info (name, µV, color):')
+            print('Stim Channel 1 Info (name, µA, color):')
             stimchannel1 = input()
             stimv1 = input()
             stimcolor1 = input()
-            print('Stim Channel 2 Info (name, µV, color):')
+            print('Stim Channel 2 Info (name, µA, color):')
             stimchannel2 = input()
             stimv2 = input()
             stimcolor2 = input()
