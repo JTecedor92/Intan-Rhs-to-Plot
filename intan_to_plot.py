@@ -167,6 +167,8 @@ def main():
             rownum = 1
             colnum = 1
         
+        wpad = 0
+
         if plotnum <= (rownum*colnum):
             print('\nLayout mapped')
         else:
@@ -220,6 +222,7 @@ def main():
     
                 if folder_path:
                     x, y, stim = process_main_folder(folder_path, channel, stimbool)
+                    print('Plotting...')
                     plt.plot(x, y, color=color, label='Channel ' + loc + ' (' + kind + ')')
 
                     if stimbool:
@@ -243,7 +246,6 @@ def main():
                                     plt.vlines(x = x[j], color=stimcolor2, ymin = -50, ymax = 50)
                                 c2 += 1
                             c1 += 1
-                    print('Plotting...')
 
             if numch > 1:
                 print('\nTitle:')
@@ -282,19 +284,30 @@ def main():
         print('Color:')
         color = input()
 
-        print('Stim channel (1-2):')
+        print('Stim channel name:')
+        stimchannel = input()
+
+        print('Stim channel color:')
+        stimcolor = input()
+
+        print('Stim channel (1-8):')
         stimloc = int(input())
-        if stimloc == 1:
-            stimindex = 0
-        elif stimloc == 2:
-            stimindex = 1
+        if stimloc >= 1:
+            stimindex = stimloc - 1
         else:
             print('\nStim channel not found')
             quit()
+
+        print('Seconds before')
+        sprior = int(input())
+
+        print('Seconds after')
+        sposterior = int(input())
         
         if folder_path:
             stimbool = True
             x, y, stim = process_main_folder(folder_path, channel, stimbool)
+            print('Plotting...')
             z = stim.tolist()
             i = z[stimindex]
             plots = []
@@ -321,13 +334,16 @@ def main():
             ax = plt.gca()
             ax.set_frame_on(False)
             ax.axis('off')
+            wpad = -1.5
             for k in plots:
                 plt.subplot(rowcount, colcount, plots.index(k) + 1)
                 plt.plot(x, y, color=color)
+                plt.vlines(x = float(x[k][0].item()), color=stimcolor, label = stimchannel + ' ~' + str(round(x[k][0].item(), 1)) + 's', ymin = -50, ymax = 50)
                 plt.xlabel('Time (s)')
-                plt.xlim(float(x[k][0].item()) - 1, float(x[k][0].item()) + 3)
+                plt.xlim(float(x[k][0].item()) - sprior, float(x[k][0].item()) + sposterior)
                 plt.ylabel('Signal (µV)')
                 plt.ylim(-1*yrange, yrange)
+                plt.legend(loc='upper left')
                 plt.grid(True)          
 
     else:
@@ -335,8 +351,8 @@ def main():
         quit()
 
     root.destroy()
-    print('\n Plot completed')
-    plt.tight_layout(h_pad=2)
+    print('\nPlot completed')
+    plt.tight_layout(h_pad=2, w_pad = wpad)
     plt.show()
     
 if __name__ == "__main__":
