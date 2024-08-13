@@ -139,7 +139,7 @@ def Concatenate(rhs_folders, stimbool):
             concatenated_signal = np.concatenate((concatenated_signal, rhs_data['amplifier_data']), axis=1)
             concatenated_time = np.concatenate((concatenated_time, rhs_data['t']))
             if stimbool:
-                concatenated_time = np.concatenate((concatenated_stim, rhs_data['board_dig_out_data']))
+                concatenated_stim = np.concatenate((concatenated_stim, rhs_data['board_dig_out_data']), axis=1)
 
     print('All files read and concatinated')
     return concatenated_signal,concatenated_time,concatenated_stim
